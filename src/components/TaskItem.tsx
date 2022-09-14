@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Image, StyleSheet, TouchableOpacity, View, TextInput } from "react-native";
 import Icon from 'react-native-vector-icons/Feather';
-import editIcon from '../assets/icons/pencil/pencil.png';
+import editIcon from '../assets/icons/pencil/edit.png';
 import trashIcon from '../assets/icons/trash/trash.png'
+import { EditTaskArgs } from "../pages/Home";
 import { Task } from "./TasksList";
 
 interface TaskItemProps  {
@@ -10,13 +11,12 @@ interface TaskItemProps  {
   index : number;
   toggleTaskDone: (id: number) => void;
   removeTask: (id: number) => void;
-  editTask: (id: number, title: string) => void;
+  editTask: ({taskId, taskNewTitle} : EditTaskArgs) => void;
 }
 
 export function TaskItem({task, index, toggleTaskDone, removeTask, editTask } : TaskItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [taskNewTitleValue, setTaskNewTitleValue] = useState(task.title);
-
   const textInputRef = useRef<TextInput>(null);
 
   function handleStartEditing () {
@@ -29,7 +29,9 @@ export function TaskItem({task, index, toggleTaskDone, removeTask, editTask } : 
   }
 
   function handleSubmitEditing () {
-    editTask(task.id, taskNewTitleValue);
+    editTask({taskId : task.id, 
+      taskNewTitle: taskNewTitleValue
+    });
     setIsEditing(false);
   }
   
@@ -44,8 +46,8 @@ export function TaskItem({task, index, toggleTaskDone, removeTask, editTask } : 
   }, [isEditing]);
 
   return (
-    <>
-      <View>
+    <View style={styles.container}>
+      <View style={styles.infoContainer}>
         <TouchableOpacity
           testID={`button-${index}`}
           activeOpacity={0.7}
@@ -78,50 +80,61 @@ export function TaskItem({task, index, toggleTaskDone, removeTask, editTask } : 
             }
             value={taskNewTitleValue}
             editable={isEditing}
-            onChangeText={setTaskNewTitleValue}
+            onChangeText={text => {
+              console.log("text: ", text)
+              setTaskNewTitleValue(text)
+            }}
             onSubmitEditing={handleSubmitEditing}
-          >
-            {task.title}
-          </TextInput>
-        </TouchableOpacity>
-
-        <View style={ styles.iconsContainer } >
-          { isEditing ? (
-            <TouchableOpacity
-              onPress={handleCancelEditing}
-            >
-              <Icon name="x" size={24} color="#b2b2b2" />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              onPress={handleStartEditing}
-            >
-              <Image source={editIcon} />
-            </TouchableOpacity>
-          ) }
-
-          <View 
-            style={ styles.iconsDivider }
           />
-
-          <TouchableOpacity
-            disabled={isEditing}
-            onPress={() => removeTask(task.id)}
-          >
-            <Image source={trashIcon} style={{ opacity: isEditing ? 0.2 : 1 }} />
-          </TouchableOpacity>
-        </View>
+        </TouchableOpacity> 
       </View>
 
-    </>
+      <View style={ styles.iconsContainer } >
+        { isEditing ? (
+          <TouchableOpacity
+            onPress={handleCancelEditing}
+          >
+            <Icon name="x" size={24} color="#b2b2b2" />
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            onPress={handleStartEditing}
+          >
+            <Image source={editIcon} />
+          </TouchableOpacity>
+        ) }
+
+        <View 
+          style={ styles.iconsDivider }
+        />
+
+        <TouchableOpacity
+          disabled={isEditing}
+          onPress={() => removeTask(task.id)}
+        >
+          <Image source={trashIcon} style={{ opacity: isEditing ? 0.2 : 1 }} />
+        </TouchableOpacity>
+
+      </View>
+    </View>
+
+    
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between' 
+  },
+  infoContainer: {
+    flex: 1
+  },
   taskButton: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingVertical: 15,
     marginBottom: 4,
     borderRadius: 4,
     flexDirection: 'row',
@@ -155,13 +168,17 @@ const styles = StyleSheet.create({
     textDecorationLine: 'line-through',
     fontFamily: 'Inter-Medium'
   },
-  iconsContainer:{
-    padding: 1,
-    height: 24,
-    color: 'rgba(196, 196, 196, 0.24)'
+  iconsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingLeft: 12,
+    paddingRight: 24
   },
   iconsDivider: {
-    margin: 10,
-    color: '#C4C4C4'
+    width: 1,
+    height: 24,
+    backgroundColor: 'rgba(196, 196, 196, 0.24)',
+    marginHorizontal: 10
   }
 })
